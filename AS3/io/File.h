@@ -9,23 +9,32 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct directory* newDirectory(char* path, char* name);
+typedef struct String{
+    char s[50];
+} String;
+
+struct filenode* newFile(char* path, char* name, int type);
 int Check_path(char* path);
 int Find_folder_index(char* name);
 //Formatting the disk - initial set up and layout
 void InitLLFS(void);
 
 
-
+struct filenode* LoadFiles(int type, int entries[] , struct String* name, int size);
 void Loading(FILE* disk);
+void Load_Structure(FILE* disk);
 void Print_map(void);
-void Print_folders(void);
+void Print_blocks(void);
+void Print_structure(void);
+void Print_files(void);
 void Update_blocklist(FILE* disk);
 void Update_inodeMap(FILE* disk);
-void Update_to_disk(void);
+void Update_inodes(FILE* disk);
+void Update_directories(FILE* disk);
+void Update_to_disk(FILE* disk);
 
 //Creating a file - given some directory location in tree hiarachy, name and type
-void Createf(char* path, char* name, int type);
+void Createf(FILE* disk, char* path, char* name, int type);
 /*
 § Check to see if there are any free inode blocks
 § If there are then create new inode with name, type of file (directory or regular) etc.
@@ -51,7 +60,7 @@ void Createf(char* path, char* name, int type);
 
 
 
-
+void Writing(FILE* disk, char* filename, char* buffer);
 
 //Writing to a file - append to an existing file
 
