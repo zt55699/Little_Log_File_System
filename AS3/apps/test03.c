@@ -46,6 +46,11 @@ int main(){
     content = (unsigned char*) *text;
     Writing(disk, pathname, content);
     printf("Start free\n");
+    for(int i=0; i < sizeof(text); i++){
+        if(text[i]!=NULL)
+            free(text[i]);
+    }
+        
     //free(*text);
     printf("*text freed\n");
     free(text);
