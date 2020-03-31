@@ -711,7 +711,17 @@ void Writing(FILE* disk, char* pathname, unsigned char* content)
         printf("Invalid Pathname!\n");
         return;
     }
-   
+    //check inode's 10 indirect blocks whether there is free ones
+    int blocks_status = -1;
+    for(int i=0; i<10; i++){
+        if(InodeMap[finode].block_num[i]==0)
+            blocks_status = 0;
+    }
+    if(blocks_status == -1){
+        printf("Inode[%d] %s has no free indirect blocks. No writing\n", finode, InodeMap[finode].name);
+        return;
+    }
+    
     int cur_block = 0;
     int remaing_size = (int)strlen((char*)content);
     InodeMap[finode].size += remaing_size;
@@ -736,7 +746,7 @@ void Writing(FILE* disk, char* pathname, unsigned char* content)
     }
     free(buffer);
     if (cur_block>=10){
-        printf("Inode[%d] %s run out of indirect blocks. No writing\n", finode, InodeMap[finode].name);
+        printf("Inode[%d] %s run out of indirect blocks.\n", finode, InodeMap[finode].name);
     }
     Update_to_disk(disk);
 }
