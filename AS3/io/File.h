@@ -8,18 +8,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <fcntl.h>
 
 typedef struct String{
     char s[50];
 } String;
 
 struct filenode* newFile(char* path, char* name, int type);
-int Check_path(char* path);
-int Find_folder_index(char* name);
+int Check_path(char* path); //return -1 if path is valid, return the innerest file's inode# if valid.
+int Find_folder_index(char* name); // given the file's filename, return its index in files[]
+
 //Formatting the disk - initial set up and layout
 void InitLLFS(void);
 
-
+int Assign_afreeblock(void); // return a free block#, return -1 if full
 struct filenode* LoadFiles(int type, int entries[] , struct String* name, int size);
 void Loading(FILE* disk);
 void Load_Structure(FILE* disk);
@@ -60,7 +64,7 @@ void Createf(FILE* disk, char* path, char* name, int type);
 
 
 
-void Writing(FILE* disk, char* filename, char* buffer);
+void Writing(FILE* disk, char* pathname, unsigned char* content);
 
 //Writing to a file - append to an existing file
 
@@ -85,6 +89,7 @@ void Writing(FILE* disk, char* filename, char* buffer);
 
 
 
+int read_data(char **result,char *fileName);
 
 
 

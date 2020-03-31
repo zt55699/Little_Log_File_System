@@ -4,7 +4,7 @@
 int Fsck_status = 0;    // use this value to track whetehr the disk crashed or not
 typedef struct Inode {
     int num;    //initialize to -1
-    int location;
+    int location;   //absolute location Not block#
     int size;   //size of all files in bytes
     int flag;   //0 indicates flat file, 1 indicates directory
     int block_num[10];
@@ -130,6 +130,8 @@ struct filenode* newFile(char* path, char* name, int type){
     return(file);
 }
 
+
+// given the file's filename, return its index in files[]
 int Find_folder_index(char* name){
     for(int i = 0; i < MAX_FOLDER_NUM; i++){
         if(strcmp(files[i]->names[0], name)==0){
@@ -139,7 +141,7 @@ int Find_folder_index(char* name){
     return -1;
 }
 
-// return 0 if path is valid, return -1 if path is invalid
+//return -1 if path is valid, return the innerest file's inode# if valid.
 int Check_path(char* path){
     int num_level = 0;
     char tempath[50] = {0};
@@ -161,8 +163,8 @@ int Check_path(char* path){
         if(files[j]->type==1 && strcmp(files[j]->names[0],tempfolder[0])==0){
             //printf("%s == %s\n ",files[j]->names[0], tempfolder[0]);
             if(num_level == 1){
-                printf("  path '%s' valid\n", path);
-                return 0;
+                printf("  aim path '%s' valid\n", path);
+                return files[j]->inode_index[0];
             }
             for(int k =0; k<MAX_PER_FOLDER; k++){
                 if(files[j]->names[k] == NULL){
@@ -172,24 +174,24 @@ int Check_path(char* path){
                 if(strcmp(files[j]->names[k] , tempfolder[1])==0){
                     //printf("%s == %s\n ",files[j]->names[k], tempfolder[1]);
                     if(num_level == 2){
-                        printf("  path '%s' valid\n", path);
-                        return 0;
+                        printf("  aim path '%s' valid\n", path);
+                        return files[j]->inode_index[k];
                     }
                     for(int l =0; l<MAX_PER_FOLDER; l++){
                         if(files[Find_folder_index(files[j]->names[k])]->names[l] == NULL)
                             continue;
                         if(files[Find_folder_index(files[j]->names[k])]->type == 1 &&strcmp(files[Find_folder_index(files[j]->names[k])]->names[l], tempfolder[2])==0){
                             if(num_level == 3){
-                                printf("  path '%s' valid\n", path);
-                                return 0;
+                                printf("  aim path '%s' valid\n", path);
+                                return files[Find_folder_index(files[j]->names[k])]->inode_index[l];
                             }
                             for(int m =0; m<MAX_PER_FOLDER; m++){
                                 if(files[Find_folder_index(tempfolder[2])]->names[m] == NULL)
                                     continue;
                                 if(strcmp(files[Find_folder_index(tempfolder[2])]->names[m], tempfolder[3])==0){
                                     if(num_level == 4){
-                                        printf("  path '%s' valid\n", path);
-                                        return 0;
+                                        printf("  aim path '%s' valid\n", path);
+                                        return files[Find_folder_index(tempfolder[2])]->inode_index[m];
                                     }
                                     if(num_level >4){
                                         printf("Only support at most 4 levels of directories\n");
@@ -261,7 +263,7 @@ void InitLLFS()
     // Initialize Block 3 - initial inode for root directory
     // An inode has to be allocated to represent information for the root directory.
     buffer = (unsigned char *) malloc(BLOCK_SIZE);
-    int size = 512;
+    int size = 0;
     int flags = 1;
     int block_ptr[10] = {9,0,0,0,0,0,0,0,0,0};
     int indirect = 0;
@@ -336,12 +338,12 @@ void Print_blocks(){
 // print out file structure in memory, loading() first
 void Print_structure(){
     printf("files structure:\n");
-    printf("  /root\n");
+    printf("  /root              [i#:%d size:%d]\n", 0, InodeMap[0].size);
     for(int i=1; i<MAX_PER_FOLDER; i++){
         if(files[0]->names[i] == NULL)
             continue;
         else{
-            printf("    |--%s\n",  files[0]->names[i]);
+            printf("    |--%s      [i#:%d size:%d]\n",  files[0]->names[i], files[0]->inode_index[i], InodeMap[files[0]->inode_index[i]].size);
             if(files[Find_folder_index(files[0]->names[i])]->type == 0){
                 continue;
             }
@@ -350,21 +352,21 @@ void Print_structure(){
                     continue;
                 }
                 else{
-                    printf("        |--%s\n",  files[Find_folder_index(files[0]->names[i])]->names[j]);
+                    printf("        |--%s      [i#:%d size:%d]\n",  files[Find_folder_index(files[0]->names[i])]->names[j], files[Find_folder_index(files[0]->names[i])]->inode_index[j], InodeMap[files[Find_folder_index(files[0]->names[i])]->inode_index[j]].size);
                     if(files[Find_folder_index(files[Find_folder_index(files[0]->names[i])]->names[j])]->type==0)
                         continue;
                     for(int k =1; k<MAX_PER_FOLDER; k++){
                         if(files[Find_folder_index(files[Find_folder_index(files[0]->names[i])]->names[j])]->names[k]==NULL)
                             continue;
                         else{
-                            printf("            |--%s\n",  files[Find_folder_index(files[Find_folder_index(files[0]->names[i])]->names[j])]->names[k]);
+                            printf("            |--%s      [i#:%d size:%d]\n",  files[Find_folder_index(files[Find_folder_index(files[0]->names[i])]->names[j])]->names[k], files[Find_folder_index(files[Find_folder_index(files[0]->names[i])]->names[j])]->inode_index[k], InodeMap[files[Find_folder_index(files[Find_folder_index(files[0]->names[i])]->names[j])]->inode_index[k]].size);
                             if(files[Find_folder_index(files[Find_folder_index(files[Find_folder_index(files[0]->names[i])]->names[j])]->names[k])]->type==0)
                                     continue;
                             for(int l =1; l<MAX_PER_FOLDER; l++){
                             if(files[Find_folder_index(files[Find_folder_index(files[Find_folder_index(files[0]->names[i])]->names[j])]->names[k])]->names[l]==NULL)
                                     continue;
                                 else{
-                                    printf("                |--%s\n",  files[Find_folder_index(files[Find_folder_index(files[Find_folder_index(files[0]->names[i])]->names[j])]->names[k])]->names[j]);
+                                    printf("                |--%s      [i#:%d size:%d]\n",  files[Find_folder_index(files[Find_folder_index(files[Find_folder_index(files[0]->names[i])]->names[j])]->names[k])]->names[j], files[Find_folder_index(files[Find_folder_index(files[Find_folder_index(files[0]->names[i])]->names[j])]->names[k])]->inode_index[j], InodeMap[files[Find_folder_index(files[Find_folder_index(files[Find_folder_index(files[0]->names[i])]->names[j])]->names[k])]->inode_index[j]].size);
                                 }
                             }
                         }
@@ -700,15 +702,95 @@ void Createf(FILE* disk, char* path, char* name, int type)
 }
 
 //Writing to a file - append to an existing file
-void Writing(FILE* disk, char* filename, char* buffer)
+void Writing(FILE* disk, char* pathname, unsigned char* content)
 {
     Loading(disk);
-    
-    
-    
-    
+    printf("Writing content in disk\n");
+    int finode = Check_path(pathname);
+    if(finode == -1){
+        printf("Invalid Pathname!\n");
+        return;
+    }
+   
+    int cur_block = 0;
+    int remaing_size = (int)strlen((char*)content);
+    InodeMap[finode].size += remaing_size;
+    InodeMap[0].size += remaing_size;
+    printf("  write %d bytes to %s\n", remaing_size, pathname);
+    unsigned char* buffer = (unsigned char*)malloc(512);
+    memset(buffer, 0, 512);
+    while(cur_block <10){
+        if(InodeMap[finode].block_num[cur_block]==0){
+            memcpy(buffer, content, strlen((char*)content));
+            InodeMap[finode].block_num[cur_block] = Assign_afreeblock();
+            printf("    write to location:%d\n", InodeMap[finode].block_num[cur_block]*512);
+            writeBlock(disk,  InodeMap[finode].block_num[cur_block], buffer);
+            remaing_size -= 512;
+            if(remaing_size<= 0){
+                printf("All content has been written.\n\n");
+                break;
+            }
+        }
+        else
+            cur_block++;
+    }
+    free(buffer);
+    if (cur_block>=10){
+        printf("Inode[%d] %s run out of indirect blocks. No writing\n", finode, InodeMap[finode].name);
+    }
     Update_to_disk(disk);
-    printf("done writing\n\n");
 }
 
 
+// return a free block#, return -1 if full
+int Assign_afreeblock()
+{
+    for(int i=0; i<NUM_BLOCKS; i++){
+        if(blocklist[i]==0){
+            blocklist[i] = 1;
+            return i;
+        }
+    }
+    printf("Error: No free blocks available!\n");
+    return -1;
+}
+
+
+// read content stored in a file into buffer, return 1 if successful, return 0 if fail
+int read_data(char **result,char *fileName)
+{
+    struct stat fileInfo;
+    FILE *filePointer;
+    char *fileDate;
+
+    if(fileName==NULL)
+    {
+        printf("NULL %s\n", fileName);
+        return 0;
+    }
+    
+    char* path = "../apps/";
+    char* pathname = (char *) malloc(1 + strlen(path)+ strlen(fileName) );
+    strcpy(pathname,path);
+    strcat(pathname,fileName);
+    printf("External source: %s\n", pathname);
+    if(!(filePointer=fopen(pathname,"rb ")))
+    {return 0;}
+
+    stat(fileName,&fileInfo);
+
+    fileDate=malloc(sizeof(char)*(fileInfo.st_size+1));
+
+    fread(fileDate,sizeof(char),fileInfo.st_size,filePointer);
+
+    fclose(filePointer);
+
+    fileDate[fileInfo.st_size]=0;
+
+
+    //printf("\n%s\n",fileDate);
+    *result=fileDate;
+    //printf("\n-------------\n");
+    return 1;
+
+}
