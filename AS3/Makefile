@@ -21,5 +21,5 @@ file.o: io/File.c disk/disk.c io/File.h
 .PHONY: clean
 
 clean:
-	rm *.o 
+	rm *.o file.o disk.o
 	find apps -type f -not -name '*.c' -print0 | xargs -0 rm --

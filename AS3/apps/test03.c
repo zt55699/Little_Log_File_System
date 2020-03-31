@@ -37,7 +37,8 @@ int main(){
     
     printf("----------------------------\nStart writing content of multiple-block size (test file here is 3271 bytes) into /root/readme.txt\n----------------------------\n");
     // writng a content of multiple blocks size, the file should less than 10 block size, which is less than 5120 bytes, the testfile "Text.txt" is under /apps.
-    char**text= (char**)malloc(BLOCK_SIZE*10);
+    char**text = NULL;
+    *text = (char*)malloc(BLOCK_SIZE*10);
     if(read_data(text,"Text.txt") ==0){
         printf("ERROR: File does Not exist!\n");
         return -1;
@@ -45,7 +46,9 @@ int main(){
     //printf("Content:\n%s\n", *text);
     content = (unsigned char*) *text;
     Writing(disk, pathname, content);
+    printf("Start free\n");
     free(*text);
+    printf("Free *text\n");
     free(text);
     
     printf("Free successfully\n");
