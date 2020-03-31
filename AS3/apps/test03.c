@@ -45,12 +45,8 @@ int main(){
     //printf("Content:\n%s\n", *text);
     content = (unsigned char*) *text;
     Writing(disk, pathname, content);
-    printf("Start free\n");
     free(content);
-    printf("*text freed\n");
-    //free(text);
     
-    printf("Free successfully\n");
     Print_structure();
     Print_map();
     //Print_blocks();
