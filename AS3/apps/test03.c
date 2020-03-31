@@ -48,7 +48,7 @@ int main(){
     free(*text);
     free(text);
     
-    
+    printf("Free successfully\n");
     Print_structure();
     Print_map();
     //Print_blocks();
