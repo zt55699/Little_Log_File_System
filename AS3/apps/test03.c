@@ -35,7 +35,7 @@ int main(){
     Print_structure();
     
     
-    printf("----------------------------\nStart writing content of multiple-block size (test file here is 3271 bytes) into /root/readme.txt\n----------------------------\n");
+    printf("----------------------------\nStart writing content of multiple-block size (test file here is 3349 bytes) into /root/readme.txt\n----------------------------\n");
     // writng a content of multiple blocks size, the file should less than 10 block size, which is less than 5120 bytes, the testfile "Text.txt" is under /apps.
     char**text= (char**)malloc(BLOCK_SIZE*10);
     if(read_data(text,"Text.txt") ==0){

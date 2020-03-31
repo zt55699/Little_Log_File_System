@@ -7,7 +7,7 @@ $(info TESTFILES are $(TESTFILES))
 TESTS := $(TESTFILES:apps/%.c=%)
 $(info TESTS are $(TESTS))
 
-all: $(TESTS) disk.o file.o
+all: $(TESTS) disk.o file.o clean
 
 test%: apps/test%.c file.o
 	$(CC) $(CFLAGS) -o apps/$@ $^
@@ -22,4 +22,3 @@ file.o: io/File.c disk/disk.c io/File.h
 
 clean:
 	rm *.o
-	find apps -type f -not -name '*.c' -print0 | xargs -0 rm --
