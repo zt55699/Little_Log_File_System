@@ -65,9 +65,8 @@ void Createf(FILE* disk, char* path, char* name, int type);
 
 
 void Writing(FILE* disk, char* pathname, unsigned char* content);
-
-//Writing to a file - append to an existing file
-
+char* Reading(FILE* disk, char* pathname);
+void Deleting (FILE* disk, char* pathname);
 
 
 
@@ -89,7 +88,7 @@ void Writing(FILE* disk, char* pathname, unsigned char* content);
 
 
 
-int read_data(char **result,char *fileName);
+int read_extdata(char **result,char *fileName);
 
 
 

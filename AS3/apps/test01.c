@@ -15,7 +15,7 @@ int main(){
     unsigned char* buffer;
     buffer = (unsigned char *) malloc(BLOCK_SIZE);
     readBlock(disk, 11, buffer); //read free block list into memory
-    printf("Read Block11 in HEX: \n");
+    printf("* Read Block11 in HEX: \n");
     print_hexbuffer(buffer);
     free(buffer);
     
@@ -27,7 +27,7 @@ int main(){
     free(buffer);
     buffer = (unsigned char *) malloc(BLOCK_SIZE);
     readBlock(disk, 11, buffer); //read free block list into memory
-    printf("Read Block11 in HEX: \n");
+    printf("* Read Block11 in HEX: \n");
     print_hexbuffer(buffer);
     free(buffer);
     fclose(disk);
