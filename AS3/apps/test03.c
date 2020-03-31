@@ -48,7 +48,7 @@ int main(){
     printf("Start free\n");
     free(content);
     printf("*text freed\n");
-    free(text);
+    //free(text);
     
     printf("Free successfully\n");
     Print_structure();
