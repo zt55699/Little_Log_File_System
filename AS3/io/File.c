@@ -725,7 +725,38 @@ void Writing(FILE* disk, char* pathname, unsigned char* content)
     int cur_block = 0;
     int remaing_size = (int)strlen((char*)content);
     InodeMap[finode].size += remaing_size;
+    
+    // Update the file size;
     InodeMap[0].size += remaing_size;
+    for(int i = 1; i<MAX_FOLDER_NUM; i++){
+        for(int j=1; j<MAX_PER_FOLDER; j++){
+            if(files[i]!=NULL){
+                if(files[i]->inode_index[j] == finode){
+                    InodeMap[files[i]->inode_index[0]].size+= remaing_size;
+                    printf("    inode[%d]==%d %s +=%d\n",j, finode,InodeMap[files[i]->inode_index[0]].name, remaing_size);
+                    for(int k = 1; k < MAX_FOLDER_NUM; k++){
+                        for(int l = 1; l<MAX_PER_FOLDER; l++){
+                            if(files[k]!=NULL){
+                                if(files[k]->inode_index[l]==files[i]->inode_index[0]){
+                                    InodeMap[files[k]->inode_index[0]].size+= remaing_size;
+                                    printf("    inode[%d]==%d %s +=%d\n",l,files[i]->inode_index[j], InodeMap[files[k]->inode_index[0]].name, remaing_size);
+                                    for(int m =1; m<MAX_FOLDER_NUM; m++){
+                                        for(int n = 1; n<MAX_PER_FOLDER; n++){
+                                                                                   if(files[m]!=NULL){ if(files[m]->inode_index[n] == files[k]->inode_index[0]){
+                                                printf("    inode[%d]==%d %s +=%d\n",n, files[k]->inode_index[l],InodeMap[files[m]->inode_index[0]].name, remaing_size);                                       InodeMap[files[m]->inode_index[0]].size += remaing_size;
+                                                                                   }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
     printf("  write %d bytes to %s\n", remaing_size, pathname);
     unsigned char* buffer = (unsigned char*)malloc(512);
     memset(buffer, 0, 512);

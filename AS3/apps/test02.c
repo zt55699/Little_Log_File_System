@@ -21,7 +21,7 @@ int main(){
     Createf(disk,"/root", "folder1", 1);
     Createf(disk,"/root/folder1", "folder2", 1);
     Createf(disk,"/root", "folder3", 1);
-    Createf(disk,"/root/folder1", "data3", 0);
+    Createf(disk,"/root/folder1", "LLFS.txt", 0);
     sleep(1);
 
     Print_map();
