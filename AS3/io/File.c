@@ -1,7 +1,7 @@
 #include "File.h"
 #include "../disk/disk.c"
-
-int Fsck_status = 0;    // use this value to track whetehr the disk crashed or not
+int Crash_simulator = 0; // 0 indicates turn off crash_simulator; 1 for crash scenario1, 2 for scenario2.
+int Fsck_status = 0;    // use this value to track whetehr the disk crashed or not. 0 means no need fsck
 typedef struct Inode {
     int num;    //initialize to -1
     int location;   //absolute location Not block#
@@ -133,6 +133,10 @@ struct filenode* newFile(char* path, char* name, int type){
 
 // given the file's filename, return its index in files[]
 int Find_folder_index(char* name){
+    if(strlen(name)<=0){
+        printf (    "Try find empty string exit!/n");
+        exit (0);
+    }
     for(int i = 0; i < MAX_FOLDER_NUM; i++){
         if(files[i]!=NULL){
             if(strcmp(files[i]->names[0], name)==0){
@@ -279,7 +283,15 @@ void InitLLFS()
     memcpy(buffer + 8+2*10, &indirect, 4);
     writeBlock(disk, 3, buffer);
     free(buffer);
-
+    
+    // Initialize Block 8 - initial fsck_status indicator
+    buffer = (unsigned char *) malloc(BLOCK_SIZE);
+    int fsck_indicator = 0;
+    memset(buffer, 0, 512);
+    memcpy(buffer, &fsck_indicator, sizeof(int));
+    writeBlock(disk, 8, buffer);
+    free(buffer);
+    
     // Initialize Block 9 - root directory.
     buffer = (unsigned char *) malloc(BLOCK_SIZE);
     unsigned int entries[16] = {0};
@@ -298,7 +310,7 @@ void InitLLFS()
     fclose(disk);
 }
 
-
+//Print out all used inodes
 void Print_map(){
     printf("Inodes-map:\n");
     int count = 0;
@@ -326,6 +338,7 @@ void Print_map(){
     printf("Total inodes: %d\n\n", num_useInode);
 }
 
+//Print out all used blocks
 void Print_blocks(){
     printf("Blocks occupied:\n");
     int count = 0;
@@ -391,6 +404,7 @@ void Print_structure(){
     printf("\n");
 }
 
+// print out all files
 void Print_files()
 {
     for(int i = 0; i <MAX_FOLDER_NUM; i++){
@@ -411,11 +425,10 @@ void Print_files()
 
 
 
-
 void Loading(FILE* disk){
+    //read free block list into memory
     unsigned char* buffer;
     buffer = (unsigned char *) malloc(BLOCK_SIZE);
-    //read free block list into memory
     readBlock(disk, 1, buffer);
     for(int i =0; i <BLOCK_SIZE; i++){
         for(int j =0; j <8; j++){
@@ -491,6 +504,8 @@ void Loading(FILE* disk){
     //Print_blocks();
     printf("----------------------------\n");
     printf("VDisk loaded.\n");
+    //Checking the integrity of the inodes and the blocks
+    fsck(disk);
 }
 
 // Load file-structure into memory
@@ -516,6 +531,7 @@ void Load_Structure(FILE* disk){
             //printf("InodeMap[%d] is folder: \n", i);
             for(int j =0; j< 16; j++){
                 textbuff = (char*)malloc(31);
+                memset(textbuff,0, 31);
                 entries[j]= buffer[j*32];
                 fseek(disk, InodeMap[i].block_num[0]*512+j*32+1, SEEK_SET);
                 fread(textbuff, 31, 1, disk);
@@ -525,17 +541,19 @@ void Load_Structure(FILE* disk){
                 //    printf("%.2X ", (int)textbuff[s]);
                 //}
                 //printf("\n");
-            
+                
                 strcpy(names[j].s , textbuff);
+                sizecount++;
                 if(strlen(names[j].s) == 0){
                     free(textbuff);
                     continue;
                 }
-                sizecount++;
                 //printf("    entry:%d name:%s\n", entries[j], names[j].s);
                 strcpy(InodeMap[buffer[j*32]].name , names[j].s);
                 free(textbuff);
             }
+           // printf("*** Loadfile:%s,%d, entry:%d%s,%d%s,%d%s,%d%s, sizecount:%d\n\n", names[0].s,type,entries[0],names[0].s,entries[1],names[1].s, entries[2], names[2].s,entries[3], names[3].s, sizecount);
+            
             files[tail] = LoadFiles(type, entries , names, sizecount);
             tail ++;
                 
@@ -567,16 +585,23 @@ void Load_Structure(FILE* disk){
     
 }
 
-
+// Load directories info from vdisk
 struct filenode* LoadFiles(int type, int entries[] ,struct String* name, int size){
     struct filenode* file = (struct filenode*)malloc(sizeof(struct filenode));
     file->type = type;
+    //printf("    copy size:%d\n", size);
     for(int i =0; i <size; i++){
         file->inode_index[i] = entries[i];
         file->names[i] = (char*)malloc(100);
-        strcpy(file->names[i],name[i].s);
-        //file->names[i] = name[i].s;
-        //printf("    Copy %s to filename, now it is %s\n",name[i].s, file->names[i] );
+        if(strlen(name[i].s)>0){
+           strcpy(file->names[i],name[i].s);
+            //printf("    Copy [%d] %s to filename, now it is %s\n",i, name[i].s, file->names[i] );
+        }
+        else{
+            file->names[i] = NULL;
+            //printf("    [%d]%s lenth=0\n",i, name[i].s);
+        }
+        
     }
     return(file);
 }
@@ -599,6 +624,7 @@ void Update_blocklist(FILE* disk)
     printf("  Blocklist updated.\n");
 }
 
+//update the inodeMap to the vdisk
 void Update_inodeMap(FILE* disk)
 {
     unsigned char* buffer;
@@ -621,6 +647,7 @@ void Update_inodeMap(FILE* disk)
     printf("  Inodes_map updated.\n");
 }
 
+// update inode-map
 void Update_inodes(FILE* disk)
 {
     unsigned char* buffer;
@@ -642,6 +669,7 @@ void Update_inodes(FILE* disk)
     printf("  Inodes updated.\n");
 }
 
+// update directories
 void Update_directories(FILE* disk)
 {
     unsigned char* buffer;
@@ -677,7 +705,18 @@ void Update_to_disk(FILE* disk)
     Update_inodeMap(disk);
     Update_inodes(disk);
     Update_directories(disk);
+    // All updates done, reset fsck status to FALSE;
+    Set_fsck (disk, 0);
     printf("All updates written to disk, fsck_status=FALSE\n----------------------------\n\n");
+}
+
+void Set_fsck (FILE* disk, int fsck_indicator){
+    unsigned char* buffer;
+    buffer = (unsigned char *) malloc(BLOCK_SIZE);
+    memset(buffer, 0, 512);
+    memcpy(buffer, &fsck_indicator, sizeof(int));
+    writeBlock(disk, 8, buffer);
+    free(buffer);
 }
 
 //Creating a file - given some directory location in tree hiarachy, name and type
@@ -690,8 +729,8 @@ void Update_to_disk(FILE* disk)
  */
 void Createf(FILE* disk, char* path, char* name, int type)
 {
-    
     Loading(disk);
+    Set_fsck(disk, 1);  // Mark fsck status to start of Creation
     if (type ==0)
         printf("Try create flat file: %s\n", name);
     else if (type ==1)
@@ -718,6 +757,7 @@ void Createf(FILE* disk, char* path, char* name, int type)
 void Writing(FILE* disk, char* pathname, unsigned char* content)
 {
     Loading(disk);
+    Set_fsck(disk, 2);  // Mark fsck status to start of Writing
     printf("Writing content in disk\n");
     int finode = Check_path(pathname);
     if(finode == -1){
@@ -784,8 +824,20 @@ void Writing(FILE* disk, char* pathname, unsigned char* content)
                 memcpy(buffer, content+512*chunks, remaing_size);
             }
             InodeMap[finode].block_num[cur_block] = Assign_afreeblock();
+            // Crash scenario 2: occur just after blocks have been removed from the freelist;
+            if(Crash_simulator ==2){
+                printf("*** Crash [simulation scenario2].\n");
+                exit(2);
+            }
+            
             printf("    write to location:%d\n", InodeMap[finode].block_num[cur_block]*512);
             writeBlock(disk,  InodeMap[finode].block_num[cur_block], buffer);
+            // Crash scenario 1: occur after free blocks have been allocated to a file
+            if(Crash_simulator ==1){
+                printf("*** Crash [simulation scenario1].\n");
+                exit(1);
+            }
+            
             remaing_size -= 512;
             chunks++;
             if(remaing_size<= 0){
@@ -827,9 +879,10 @@ char* Reading (FILE* disk, char* pathname){
     return text;
 }
 
-
+// deletion of files and directories
 void Deleting (FILE* disk, char* pathname){
     Loading(disk);
+    Set_fsck(disk, 3);  // Mark fsck status to start of Deletion
     printf("Start deletion\n");
     
     int finode = Check_path(pathname);
@@ -946,4 +999,81 @@ int read_extdata(char **result,char *fileName)
     //printf("\n-------------\n");
     return 1;
 
+}
+
+void fsck(FILE* disk){
+    unsigned char* buffer;
+    buffer = (unsigned char *) malloc(BLOCK_SIZE);
+    readBlock(disk, 8, buffer);
+    Fsck_status = (int)buffer[0];
+    free(buffer);
+    if(Fsck_status == 0){
+        printf("Sys_check: No fsck needed\n\n");
+        return;
+    }
+    printf("\nSys_check: VDisk not properly ejected, File System Check running now.\n----------------------------\n");
+    
+    i_check(disk);
+    d_check(disk);
+    
+    printf("Sys_check: Done!\n\n");
+    Update_to_disk(disk);
+
+    //Set_fsck(disk, 0);
+    
+}
+
+
+void i_check(FILE* disk){
+    // check block_list based on inodes
+    for(int i =0; i<NUM_BLOCKS; i++){
+        if(i<10)
+            blocklist[i] = 1;
+        else
+            blocklist[i] = 0;
+    }
+    for(int i =0; i<NUM_INODES; i++){
+        for(int j=0; j<10; j++){
+            if(InodeMap[i].block_num[j]!=0){
+                if(blocklist[ InodeMap[i].block_num[j] ]==0) // if block is in inodes, set it used
+                    blocklist[ InodeMap[i].block_num[j] ]=1;
+                else{
+                    printf("ERROR: block[%d] in multiple inodes! Fix it manually\n", InodeMap[i].block_num[j]);
+                    exit(9);
+                }
+            }
+        }
+    }
+    // free_block_list now match inodes
+    printf("  Done i_check.\n");
+}
+
+void d_check(FILE* disk){
+    for(int i=0; i<NUM_INODES; i++){
+        if(InodeMap[i].flag == 1){
+            for(int j =1; j<MAX_PER_FOLDER; j++){
+                if(InodeMap[i].block_num[j]!=0){
+                    // if the entry file nolonger exists, then delete it
+                    if( files[Find_folder_index(InodeMap[i].name)] == NULL ){
+                        InodeMap[i].block_num[j] = 0;
+                    }
+                    else{
+                        for(int k=1; k< MAX_PER_FOLDER; k++){
+                            if(files[Find_folder_index(InodeMap[i].name)]->inode_index[k]==0){
+                                files[Find_folder_index(InodeMap[i].name)]->inode_index[k] = InodeMap[i].num;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    printf("  Done d_check.\n");
+}
+
+// 0 indicates turn off crash_simulator; 1 for crash scenario1, 2 for scenario2.
+void Set_simulator(int sim){
+    Crash_simulator = sim;
+    printf("Set Crash [scenario %d]\n", sim);
 }

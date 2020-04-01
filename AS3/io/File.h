@@ -16,80 +16,33 @@ typedef struct String{
     char s[50];
 } String;
 
-struct filenode* newFile(char* path, char* name, int type);
-int Check_path(char* path); //return -1 if path is valid, return the innerest file's inode# if valid.
+void InitLLFS(void); //Formatting the disk - initial set up and layout
+struct filenode* newFile(char* path, char* name, int type); // Creating a new file, return a filenode struct for files[]
+int Check_path(char* path); //return -1 if path is valid, return the aim file's inode# if valid.
 int Find_folder_index(char* name); // given the file's filename, return its index in files[]
-
-//Formatting the disk - initial set up and layout
-void InitLLFS(void);
-
 int Assign_afreeblock(void); // return a free block#, return -1 if full
-struct filenode* LoadFiles(int type, int entries[] , struct String* name, int size);
-void Loading(FILE* disk);
-void Load_Structure(FILE* disk);
-void Print_map(void);
-void Print_blocks(void);
-void Print_structure(void);
-void Print_files(void);
-void Update_blocklist(FILE* disk);
-void Update_inodeMap(FILE* disk);
-void Update_inodes(FILE* disk);
-void Update_directories(FILE* disk);
-void Update_to_disk(FILE* disk);
+struct filenode* LoadFiles(int type, int entries[] , struct String* name, int size); // Load directories info from vdisk
+void Loading(FILE* disk); // Loading free block list, inode map, inodes, etc. into memory.
+void Load_Structure(FILE* disk); // Loading file structure.
+void Print_map(void); // Print out all used inodes
+void Print_blocks(void); // Print out all used blocks
+void Print_structure(void); // print out file structure by Loading()
+void Print_files(void); // print out all files
+void Update_blocklist(FILE* disk); // update the free blocklist to the vdisk
+void Update_inodeMap(FILE* disk); // update the inodeMap to the vdisk
+void Update_inodes(FILE* disk); // part of updating inode-map, not necessarily update inodes
+void Update_directories(FILE* disk); // update directories
+void Update_to_disk(FILE* disk); // Call all update here, write together.
+void Createf(FILE* disk, char* path, char* name, int type); //Creating a file - given some directory location in tree hiarachy, name and type
+void Writing(FILE* disk, char* pathname, unsigned char* content); // Writing to a file - append to an existing file
+char* Reading(FILE* disk, char* pathname); // reading a file, load content into a buffer, then return it.
+void Deleting (FILE* disk, char* pathname); // deletion of files and directories
+int read_extdata(char **result,char *fileName); //Used for writing large data set into vdisk, from external source
 
-//Creating a file - given some directory location in tree hiarachy, name and type
-void Createf(FILE* disk, char* path, char* name, int type);
-/*
-§ Check to see if there are any free inode blocks
-§ If there are then create new inode with name, type of file (directory or regular) etc.
-§ Check if there are any free data blocks and if so then allocate one for the new file.
-§ Create a new directory entry for the new file in the given directory location
-§ If any of this can’t be done then return an error
- */
+void fsck(FILE* disk);//Checking the integrity of the inodes and the blocks
 
-
-
-
-
-
-//Deleting a file - from a given directory
-/*
- § Find the inode for that file given its directory listing and name
- § Get the location of the files blocks from the inode
- § Check if the file is regular file or directory – if it is directory check if it is empty or not
- § Deallocate the blocks listed in the inode – set them as free in block vector
- § Remove file listing from directory
- § Deallocate inode and set its location as free
- */
-
-
-
-void Writing(FILE* disk, char* pathname, unsigned char* content);
-char* Reading(FILE* disk, char* pathname);
-void Deleting (FILE* disk, char* pathname);
-
-
-
-//Reading from a file - load a file from disk into memory
-
-
-
-
-//Finding an inode - reading - modifying - deleting etc.
-
-
-
-//Finding an available block
-
-
-
-//Checking the integrity of the inodes and the blocks
-
-
-
-
-int read_extdata(char **result,char *fileName);
-
-
-
+void Set_fsck (FILE* disk, int fsck_status); // Set fsck_status to Vdisk
+void i_check(FILE* disk); // inodes check
+void d_check(FILE* disk); // directories check
+void Set_simulator(int sim); // 0 indicates turn off crash_simulator; 1 for crash scenario1, 2 for scenario2.
 #endif

@@ -33,6 +33,7 @@ int main(){
     
     Print_map();
     Print_blocks();
+    //Print_files();
     
     fclose(disk);
     return 0;

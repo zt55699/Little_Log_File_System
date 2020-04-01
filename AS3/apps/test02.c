@@ -18,6 +18,7 @@ int main(){
     //create flat files and create directories
 
     Createf(disk,"/root", "readme.txt", 0);
+    Createf(disk,"/root", "crash.txt", 0);
     Createf(disk,"/root", "folder1", 1);
     Createf(disk,"/root/folder1", "folder2", 1);
     Createf(disk,"/root", "folder3", 1);
