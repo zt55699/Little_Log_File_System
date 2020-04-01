@@ -610,6 +610,8 @@ struct filenode* LoadFiles(int type, int entries[] ,struct String* name, int siz
 //update the free blocklist to the vdisk
 void Update_blocklist(FILE* disk)
 {
+    for(int i = 0; i<10; i++)
+        blocklist[i] = 1;
     unsigned char* buffer;
     buffer = (unsigned char *) malloc(BLOCK_SIZE);
     unsigned char freeBlock_buffer[BLOCK_SIZE]={0};
@@ -730,7 +732,7 @@ void Set_fsck (FILE* disk, int fsck_indicator){
 void Createf(FILE* disk, char* path, char* name, int type)
 {
     Loading(disk);
-    Set_fsck(disk, 1);  // Mark fsck status to start of Creation
+    Set_fsck(disk, -1);  // Mark fsck status to start of Creation
     if (type ==0)
         printf("Try create flat file: %s\n", name);
     else if (type ==1)
@@ -757,13 +759,14 @@ void Createf(FILE* disk, char* path, char* name, int type)
 void Writing(FILE* disk, char* pathname, unsigned char* content)
 {
     Loading(disk);
-    Set_fsck(disk, 2);  // Mark fsck status to start of Writing
+    
     printf("Writing content in disk\n");
     int finode = Check_path(pathname);
     if(finode == -1){
         printf("Invalid Pathname!\n");
         return;
     }
+    Set_fsck(disk, finode);  // Mark fsck status to start of Writing
     //check inode's 10 indirect blocks whether there is free ones
     int blocks_status = -1;
     for(int i=0; i<10; i++){
@@ -827,7 +830,7 @@ void Writing(FILE* disk, char* pathname, unsigned char* content)
             //printf("Free block assigned to write: %d\n", InodeMap[finode].block_num[cur_block]);
             // Crash scenario 2: occur just after blocks have been removed from the freelist;
             if(Crash_simulator ==2){
-                printf("*** Crash [simulation scenario2].\n");
+                printf("*** Crash [simulation scenario2].\n\n");
                 exit(2);
             }
             
@@ -835,7 +838,7 @@ void Writing(FILE* disk, char* pathname, unsigned char* content)
             writeBlock(disk,  InodeMap[finode].block_num[cur_block], buffer);
             // Crash scenario 1: occur after free blocks have been allocated to a file
             if(Crash_simulator ==1){
-                printf("*** Crash [simulation scenario1].\n");
+                printf("*** Crash [simulation scenario1].\n\n");
                 exit(1);
             }
             
@@ -883,14 +886,14 @@ char* Reading (FILE* disk, char* pathname){
 // deletion of files and directories
 void Deleting (FILE* disk, char* pathname){
     Loading(disk);
-    Set_fsck(disk, 3);  // Mark fsck status to start of Deletion
-    printf("Start deletion\n");
     
+    printf("Start deletion\n");
     int finode = Check_path(pathname);
     if(finode == -1){
         printf("Invalid Pathname!\n");
         return;
     }
+    Set_fsck(disk, finode);  // Mark fsck status to start of Deletion
     if(InodeMap[finode].flag==1){
         for(int i = 1; i <MAX_PER_FOLDER; i++){
             if(files[Find_folder_index(InodeMap[finode].name)]->inode_index[i] !=0){
@@ -1016,7 +1019,10 @@ void fsck(FILE* disk){
     
     i_check(disk);
     d_check(disk);
-    
+    // if Fsck_status equals to other number, which indicates the inode may lost data. need to fix.
+    if(Fsck_status != -1){
+        
+    }
     printf("Sys_check: Done!\n\n");
     Update_to_disk(disk);
 
@@ -1027,24 +1033,27 @@ void fsck(FILE* disk){
 
 void i_check(FILE* disk){
     // check block_list based on inodes
-    for(int i =0; i<NUM_BLOCKS; i++){
-        if(i<10)
-            blocklist[i] = 1;
-        else
+    int duplication[NUM_BLOCKS] = {-1};
+    for(int i =0; i<NUM_BLOCKS; i++)
             blocklist[i] = 0;
-    }
     for(int i =0; i<NUM_INODES; i++){
         for(int j=0; j<10; j++){
+            if(blocklist[ InodeMap[i].location/512 ]==0)
+                blocklist[ InodeMap[i].location/512 ] = 1;
             if(InodeMap[i].block_num[j]!=0){
-                if(blocklist[ InodeMap[i].block_num[j] ]==0) // if block is in inodes, set it used
+                if(blocklist[ InodeMap[i].block_num[j] ]==0){ // if block is in inodes, set it used
                     blocklist[ InodeMap[i].block_num[j] ]=1;
+                    duplication[ InodeMap[i].block_num[j] ] = InodeMap[i].num;
+                }
                 else{
-                    printf("ERROR: block[%d] in multiple inodes! Fix it manually\n", InodeMap[i].block_num[j]);
+                    printf("ERROR: block[%d] in multiple inodes [%d], [%d]\n", InodeMap[i].block_num[j], InodeMap[i].num, duplication[InodeMap[i].block_num[j]]);
                     exit(9);
                 }
             }
         }
     }
+    for(int i =0; i<10; i++)
+        blocklist[i] = 1;
     // free_block_list now match inodes
     printf("  Done i_check.\n");
 }

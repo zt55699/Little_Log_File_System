@@ -41,7 +41,7 @@ int read_extdata(char **result,char *fileName); //Used for writing large data se
 
 void fsck(FILE* disk);//Checking the integrity of the inodes and the blocks
 
-void Set_fsck (FILE* disk, int fsck_status); // Set fsck_status to Vdisk
+void Set_fsck (FILE* disk, int fsck_status); // Set fsck_status to Vdisk, used to mark unsaved inode
 void i_check(FILE* disk); // inodes check
 void d_check(FILE* disk); // directories check
 void Set_simulator(int sim); // 0 indicates turn off crash_simulator; 1 for crash scenario1, 2 for scenario2.

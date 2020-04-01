@@ -17,9 +17,11 @@ int main(){
     printf("* Read files in the root direcroty\n");
     char* readfile ="/root/readme.txt";
     char* read = Reading(disk, readfile); //Reading() returns a char* of content
+    if(read!=NULL){
     printf("Content read:\n----------------------------\n");
     printf("%s\n\n\n", read);
     free(read);
+    }
     
     printf("* Read files in the sub-direcroty\n");
     readfile = "/root/folder1/LLFS.txt";
