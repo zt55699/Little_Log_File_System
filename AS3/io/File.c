@@ -824,6 +824,7 @@ void Writing(FILE* disk, char* pathname, unsigned char* content)
                 memcpy(buffer, content+512*chunks, remaing_size);
             }
             InodeMap[finode].block_num[cur_block] = Assign_afreeblock();
+            //printf("Free block assigned to write: %d\n", InodeMap[finode].block_num[cur_block]);
             // Crash scenario 2: occur just after blocks have been removed from the freelist;
             if(Crash_simulator ==2){
                 printf("*** Crash [simulation scenario2].\n");
@@ -951,7 +952,7 @@ void Deleting (FILE* disk, char* pathname){
 // return a free block#, return -1 if full
 int Assign_afreeblock()
 {
-    for(int i=0; i<NUM_BLOCKS; i++){
+    for(int i=10; i<NUM_BLOCKS; i++){
         if(blocklist[i]==0){
             blocklist[i] = 1;
             return i;

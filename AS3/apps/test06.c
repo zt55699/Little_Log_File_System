@@ -17,7 +17,8 @@ int main(){
     FILE* disk = fopen(vdisk_path, "rb+");
     Loading(disk);  //loading disk inodes/map and block_list into memory
     Print_structure(); //Print the loaded file structure
-    //Print_map();
+    Print_map();
+    Print_blocks();
    
     //Scenario 1: crashes that occur after free blocks have been allocated to a file
     //For example, crash occurs during the Writing() function, after free blocks been allocated.
