@@ -1,6 +1,7 @@
 /* test7_crash_sim2.c
  this tests the fsck function for a crushed vdisk.
- § Assumption: test2,3,4,5and 6CrashSim was sequentially performed before this test.
+ after fsck all unsaved previous data will lost
+ § Assumption: test2,3,4,5,6,7,8 was sequentially performed before this test.
  § Test the Robust of LLFS, the approach of "fsck"
  § Handle two scenarios: crashes that occur after free
     blocks have been allocated to a file, and crashes that occur just after blocks have
@@ -19,7 +20,7 @@ int main(){
     Print_structure(); //Print the loaded file structure
     Print_map();
     Print_blocks();
-   
+    printf("All good! Fsck Test passed.\n");
     
     fclose(disk);
     return 0;

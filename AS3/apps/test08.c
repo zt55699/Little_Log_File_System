@@ -1,9 +1,9 @@
-/* test7_crash_sim2.c
+/* test8.c Crash simulator 2
  This is a scenario 2 crash simulator.
  crashes that occur just after blocks have been removed from the freelist
  For example, crash occurs during the Writing() function, just after blockes been removed.
  
- § Assumption: test2,3,4,5 was sequentially performed before this test. Vdisk properly
+ § Assumption: test2,3,4,5,6,7 was sequentially performed before this test. Vdisk properly
     initialized, and few files and folders added and written.
 
  § Notice: Cannot be used to test a un-formatted disk, the vdisk to be open should be
@@ -15,7 +15,7 @@
 
 int main(){
     FILE* disk = fopen(vdisk_path, "rb+");
-    Loading(disk);  //loading disk inodes/map and block_list into memory
+    //Loading(disk);  //loading disk inodes/map and block_list into memory
     //Print_structure(); //Print the loaded file structure
     //Print_map();
     //Print_blocks();

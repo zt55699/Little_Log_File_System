@@ -1,4 +1,4 @@
-/* test6_crash_sim1.c
+/* test6.c Crash simulator1
  This is a scenario 1 crash simulator.
  crashes that occur after free blocks have been allocated to a file
  For example, crash occurs during the Writing() function, after free blocks been allocated.
@@ -15,7 +15,7 @@
 
 int main(){
     FILE* disk = fopen(vdisk_path, "rb+");
-    Loading(disk);  //loading disk inodes/map and block_list into memory
+    //Loading(disk);  //loading disk inodes/map and block_list into memory
     //Print_structure(); //Print the loaded file structure
     //Print_map();
     //Print_blocks();
