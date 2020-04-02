@@ -1083,7 +1083,7 @@ int Find_folder_index(char* name){
         exit (0);
     }
     for(int i = 0; i < MAX_FOLDER_NUM; i++){
-        //printf(" [%d]%s\n", i,files[i]->names[0]);
+        printf(" [%d]%s\n", i,files[i]->names[0]);
         if(files[i]!=NULL){
             if(strcmp(files[i]->names[0], name)==0){
                 return i;
