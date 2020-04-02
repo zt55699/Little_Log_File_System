@@ -773,6 +773,12 @@ void Writing(FILE* disk, char* pathname, unsigned char* content)
     //printf (" InodeMap[%d].size + %d = %d\n ", finode,remaing_size, InodeMap[finode].size );
     // Update the file size;
     InodeMap[0].size += remaing_size;
+    int parent= Check_parent(finode);
+    while(parent!=0){
+        InodeMap[parent].size +=remaing_size;
+        parent= Check_parent(parent);
+    }
+    /*
     for(int i = 1; i<MAX_FOLDER_NUM; i++){
         for(int j=1; j<MAX_PER_FOLDER; j++){
             if(files[i]!=NULL){
@@ -801,7 +807,7 @@ void Writing(FILE* disk, char* pathname, unsigned char* content)
                 }
             }
         }
-    }
+    }*/
     
     printf("  write %d bytes to %s\n", remaing_size, pathname);
     unsigned char* buffer = (unsigned char*)malloc(512);
