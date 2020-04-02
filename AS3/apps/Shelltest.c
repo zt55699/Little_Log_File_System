@@ -84,7 +84,9 @@ int SEEsh_write(char** args){
     char* line = NULL;
     size_t buffersize = 0; //getline allocate memory    ssize_t
     getline(&line, &buffersize, stdin);
-    Writing(disk, writefile, (unsigned char*)line);
+    //Writing(disk, writefile, (unsigned char*)line);
+    char* temp = "folder1";
+    Writing(disk, writefile, temp);
     free (writefile);
     fclose(disk);
     return 1;

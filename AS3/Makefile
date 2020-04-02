@@ -27,4 +27,4 @@ file.o: io/File.c disk/disk.c io/File.h
 .PHONY: clean
 
 clean:
-	rm *.o
+	rm *.o apps/*.o
