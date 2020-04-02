@@ -20,7 +20,7 @@ void SEEsh_loop(void);
 int SEEsh_launch(char**);
 
 //builtin commands
-char* builtin_str[] = {"cd", "help", "exit", "pwd", "mkdir", "touch", "write", "read", "rm", "ls","set", "unset"};
+char* builtin_str[] = {"cd", "help", "exit", "pwd", "mkdir", "touch", "write", "read", "rm", "ls","map","set", "unset"};
 int SEEsh_cd(char** args);
 int SEEsh_help(char** args);
 int SEEsh_exit(char** args);
@@ -33,6 +33,7 @@ int SEEsh_rm(char** args);
 int SEEsh_ls(char** args);
 int SEEsh_set(char** args);
 int SEEsh_unset(char** args);
+int SEEsh_map(char** args);
 
 int (*builtin_fun[]) (char **) = {
     &SEEsh_cd,
@@ -46,7 +47,8 @@ int (*builtin_fun[]) (char **) = {
     &SEEsh_rm,
     &SEEsh_ls,
     &SEEsh_set,
-    &SEEsh_unset
+    &SEEsh_unset,
+    &SEEsh_map
 };
 
 

@@ -11,7 +11,11 @@
 #include <signal.h>
 int current_folder = 0;
     // start in root directory
-
+int SEEsh_map(char** args){
+    Print_files();
+    Print_structure();
+    return 1;
+}
 int SEEsh_ls(char** args){
     Print_childs(current_folder);
     return 1;
