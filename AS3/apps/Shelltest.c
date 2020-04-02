@@ -17,6 +17,10 @@ int SEEsh_ls(char** args){
     return 1;
 }
 int SEEsh_mkdir(char** args){
+    if(args[1]==NULL){
+        printf ("Directory name cannot be empty!\n");
+        return 0;
+    }
     FILE* disk = fopen(vdisk_path, "rb+");
     Load_Structure(disk);
     Createf(disk,Cur_path(current_folder), args[1], 1);
@@ -84,9 +88,7 @@ int SEEsh_write(char** args){
     char* line = NULL;
     size_t buffersize = 0; //getline allocate memory    ssize_t
     getline(&line, &buffersize, stdin);
-    //Writing(disk, writefile, (unsigned char*)line);
-    char* temp = "folder1";
-    Writing(disk, writefile, (unsigned char*)temp);
+    Writing(disk, writefile, (unsigned char*)line);
     free (writefile);
     fclose(disk);
     return 1;
