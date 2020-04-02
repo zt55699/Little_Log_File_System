@@ -696,6 +696,9 @@ void Update_to_disk(FILE* disk)
     // All updates done, reset fsck status to FALSE;
     Set_fsck (disk, 0);
     printf("All updates written to disk, fsck_status=FALSE\n----------------------------\n\n");
+    Print_files();
+    Print_map();
+    Print_structure();
 }
 
 void Set_fsck (FILE* disk, int fsck_indicator){
@@ -1083,7 +1086,7 @@ int Find_folder_index(char* name){
         exit (0);
     }
     for(int i = 0; i < MAX_FOLDER_NUM; i++){
-        printf(" [%d]%s\n", i,files[i]->names[0]);
+        //printf(" [%d]%s\n", i,files[i]->names[0]);
         if(files[i]!=NULL){
             if(strcmp(files[i]->names[0], name)==0){
                 return i;
