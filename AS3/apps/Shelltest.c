@@ -245,7 +245,7 @@ void SEEsh_loop(){
     char c =getchar();
     if (c=='Y')
         InitLLFS();
-    //Loading(disk);
+    Loading(disk);
     //loading disk inodes/map and block_list into memory
     fclose(disk);
     char* line;
@@ -253,8 +253,8 @@ void SEEsh_loop(){
     int status = 1;
     sleep(1);
     do{
+        Load_Structure(disk);
         printf("? ");
-        Loading(disk);
         line = SEEsh_read_line();
         args = SEEsh_split_line(line);
         status = SEEsh_execute(args);
