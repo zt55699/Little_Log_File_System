@@ -86,7 +86,7 @@ int SEEsh_write(char** args){
     getline(&line, &buffersize, stdin);
     //Writing(disk, writefile, (unsigned char*)line);
     char* temp = "folder1";
-    Writing(disk, writefile, temp);
+    Writing(disk, writefile, (unsigned char*)temp);
     free (writefile);
     fclose(disk);
     return 1;
