@@ -1,0 +1,79 @@
+/******************************************************************
+ Report.txt for LLFS
+ CSC360 Assignment3
+
+ Name:Tong Zhang
+ StuID: V00926513
+ Date: 04/01/2020
+******************************************************************/
+
+
+Some Design decisions of my Little Log File System:
+
+	$ Vdisk layout:
+	Vdisk divides to 4096 blocks, each block is 512 bytes in size. 
+	The first 10 blocks were reserved for special purpose: 
+		Block0-Super block:
+			store the filesystem info and parameters
+		Block1-Free block vector:
+			use bit wise strategy to store 4096 blocks' 
+			free status in 512 bytes.
+		Block2-inode map:
+			for each 4 bytes: 1st bytes store the inode#
+			the rest 3bytes store the absolute location of
+			the inode.
+		Block3-inode of root directory: root's node
+		Block9-root directory: 
+			root's directory information, entries and names
+		Block8-fsck_status: store crash information
+		
+	$ Core idea:
+	After mounting a initialized vdisk, the LLFS will call Loading()
+	to loads the block list, inode map, inodes into the memory based 
+	data structure InodeMap[] and folders[]. These cached data are 
+	much faster to handle, we do all the changes relates to the file
+	structure in these memory structures. 
+	During an action like writing content, the free blocks are assigned 
+	continuously for writing action, no redundant disk seek occurs during
+	the process. After the action was done, the LLFS will call Update()
+	to write all the updates of inodes, inode map or directory into the 
+	disk. This log style strategy minimize the disk seeking frequency, which 
+	dramatically improves the writing speed.
+	But there is a trade-off: because of inodes, inode map and directories
+	only updated into the disk after one action was done. So if any 
+	crashes occur before the Update_to_disk() will cause all the unsaved
+	written content lost.
+	
+
+
+	$ Inodes & Blocks:
+	For the sake of simplicity, flat files and directory files have 
+	the same format of inodes: 32bytes long, first 4 bytes for size, 
+	next 4 bytes for flags, rest for direct blocks. The differences
+	between flat files and directories are flag and direct blocks.
+	flat files' direct blocks are for its content, but directory's 
+	inode could only use the first direct block point to its directory
+	block, which contains 16 entries and names in this directory.
+
+
+	Each inode takes a whole block space. This significantly 
+	simplified the I/O function, as well the log structure. But 
+	the trade-off is that does not use the block space efficiently, 
+	some storage were wasted.
+
+
+	$ fsck logic
+	Vdisk status indicator: int Fsck_status, stored in block8. Each 
+	time before doing change to the vdisk, store a "need fsck indicator"
+	 and what content are being changed into disk block8. Only after all 
+	updates are done, then flip the fsck bit in disk to turn off it.
+	If any crashes occur between the start of the writing and the end of 
+	the updating to disk, the fsck indicator will keep "ON". 
+	When next time loading the disk, the fsck reads the indicator in disk 
+	and run automatically to fix all the incorrect inode map,inodes and 
+	free block list. 
+	The file system can always be fixed by fsck and very robust then.
+	The only trade-off is that for all written content, if its inode was 
+	not updated to disk, the content will erased in inode map anyway.
+	It makes harder to find the unfinished writing content, but makes the
+	system much simple and robust.
