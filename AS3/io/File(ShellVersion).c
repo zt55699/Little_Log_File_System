@@ -115,6 +115,7 @@ struct filenode* newFile(char* path, char* name, int type){
             files[modify_folder]->inode_index[i]= nextfree_inode;
             printf("  %s: entry[%d] = %s\n", files[modify_folder]->names[0],i, name);
             files[modify_folder]->names[i] = name;
+            printf("files[%d]->names[%d] = %s\n", modify_folder, i, files[modify_folder]->names[i]);
             break;
         }
         temppos ++;
@@ -131,6 +132,25 @@ struct filenode* newFile(char* path, char* name, int type){
 }
 
 
+// given the file's filename, return its index in files[]
+int Find_folder_index(char* name){
+    if(strlen(name)<=0){
+        printf (    "Try find empty string exit!/n");
+        exit (0);
+    }
+    for(int i = 0; i < MAX_FOLDER_NUM; i++){
+        if(files[i]!=NULL){
+            
+            if(strcmp(files[i]->names[0], name)==0){
+                return i;
+            }
+            else
+                printf("%s!=%s\n",files[i]->names[0], name );
+        }
+    }
+    printf("ERROR: Cannot find %s in files[]\n",name);
+    return -1;
+}
 
 //return -1 if path is valid, return the innerest file's inode# if valid.
 int Check_path(char* path){
@@ -565,8 +585,8 @@ void Load_Structure(FILE* disk){
     }
     
     free(buffer);
-    //printf("%d files loaded:\n", tail);
-    //Print_files();
+    printf("%d files loaded:\n", tail);
+    Print_files();
     status = 1;
     
 }
@@ -767,7 +787,7 @@ void Writing(FILE* disk, char* pathname, unsigned char* content)
     int cur_block = 0;
     int remaing_size = (int)strlen((char*)content);
     InodeMap[finode].size += remaing_size;
-    //printf (" InodeMap[%d].size + %d = %d\n ", finode,remaing_size, InodeMap[finode].size );
+    
     // Update the file size;
     InodeMap[0].size += remaing_size;
     for(int i = 1; i<MAX_FOLDER_NUM; i++){
@@ -849,7 +869,7 @@ void Writing(FILE* disk, char* pathname, unsigned char* content)
 char* Reading (FILE* disk, char* pathname){
     Loading(disk);
     char*text= (char*)malloc(BLOCK_SIZE*10);
-    memset(text, 0, BLOCK_SIZE*10);
+    memset(text, 0, sizeof(*text));
     printf("Reading content in disk\n");
     int finode = Check_path(pathname);
     if(finode == -1){
@@ -860,7 +880,6 @@ char* Reading (FILE* disk, char* pathname){
         if(InodeMap[finode].block_num[i]!=0){
             unsigned char* buffer;
             buffer = (unsigned char *) malloc(BLOCK_SIZE);
-            memset(buffer, 0, BLOCK_SIZE);
             readBlock(disk, InodeMap[finode].block_num[i], buffer);
             //printf("    read from position %d\n---%s\n", InodeMap[finode].block_num[i]*512, (char*)buffer);
             strcat(text, (char*)buffer);
@@ -1076,36 +1095,12 @@ void Set_simulator(int sim){
 }
 
 
-// given the file's filename, return its index in files[]
-int Find_folder_index(char* name){
-    if(strlen(name)<=0){
-        printf (    "Try find empty string exit!/n");
-        exit (0);
-    }
-    for(int i = 0; i < MAX_FOLDER_NUM; i++){
-        //printf(" [%d]%s\n", i,files[i]->names[0]);
-        if(files[i]!=NULL){
-            if(strcmp(files[i]->names[0], name)==0){
-                return i;
-            }
-            
-                //printf(" %s!=%s\n", files[i]->names[0],name);
-        }
-    }
-    printf("ERROR: Cannot find %s in files[]\n",name);
-    return -1;
-}
-
-
 
 //return -1 if not find child, else return child's inode#
 int Check_child(int currenr_folder, char* child_name){
     int child = files[Find_folder_index(child_name)]->inode_index[0];
-    if(files[Find_folder_index(child_name)]->type==0){
-        printf("%s is not a directory!\n",child_name);
-        return -2;
-    }
-    //printf("find child inode#:%d\n", child);
+    
+    printf("find child inode#:%d\n", child);
     for(int i =1; i <MAX_PER_FOLDER; i++){
         if(files[ Find_folder_index(InodeMap[currenr_folder].name) ] == NULL){
             printf("ERROR check_child: files[%d] == NULL\n", currenr_folder);
@@ -1131,29 +1126,21 @@ int Check_parent(int current_folder){
 }
 
 
-//return current path pwd
+//return current path pwd NOT DONE
 char* Cur_path(int current_foler){
-    if(current_foler == 0)
-        return "/root";
     char* cur_path = (char*) malloc(50);
-    strcpy(cur_path, "/");
-    strcat(cur_path, InodeMap[current_foler].name);
-    int cur_index =Find_folder_index(InodeMap[current_foler].name);
-    if(files[cur_index]==NULL){
-        printf("ERROR: Cur_path\n");
-        exit(-2);
-    }
-    int parent= Check_parent(current_foler);
-    while(parent!=0){
-        char *tmp = strdup(cur_path);
-        strcpy(cur_path, "/");
-        strcat(cur_path, InodeMap[parent].name);
-        strcat(cur_path, tmp);
-        parent = Check_parent(parent);
-    }
-    char *tmp = strdup(cur_path);
     strcpy(cur_path, "/root");
-    strcat(cur_path, tmp);
+    for(int i =1; i<MAX_FOLDER_NUM;i++){
+        if(files[i]==NULL)
+            continue;
+        for(int j=1; j<MAX_PER_FOLDER;j++){
+            if(files[i]->names[j]== NULL)
+                continue;
+            if(files[i]->inode_index[j]== current_foler){
+                strcat(cur_path,files[i]->names[0]);
+            }
+        }
+    }
     return cur_path;
 }
 
