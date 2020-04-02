@@ -81,6 +81,10 @@ int SEEsh_unset(char** args){
 
 // write [filename]
 int SEEsh_write(char** args){
+    if(args[1]==NULL){
+        printf("Aim filename cannot be empty!\n");
+        return 1;
+    }
     FILE* disk = fopen(vdisk_path, "rb+");
     Load_Structure(disk);
     char* writefile = (char*) malloc(50);

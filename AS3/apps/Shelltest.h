@@ -46,9 +46,9 @@ int (*builtin_fun[]) (char **) = {
     &SEEsh_read,
     &SEEsh_rm,
     &SEEsh_ls,
+    &SEEsh_map,
     &SEEsh_set,
-    &SEEsh_unset,
-    &SEEsh_map
+    &SEEsh_unset
 };
 
 
