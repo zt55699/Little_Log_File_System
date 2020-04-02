@@ -17,7 +17,10 @@ int SEEsh_map(char** args){
     return 1;
 }
 int SEEsh_ls(char** args){
+    FILE* disk = fopen(vdisk_path, "rb");
+    Load_Structure(disk);
     Print_childs(current_folder);
+    fclose(disk);
     return 1;
 }
 int SEEsh_mkdir(char** args){
@@ -253,7 +256,6 @@ void SEEsh_loop(){
     int status = 1;
     sleep(1);
     do{
-        Load_Structure(disk);
         printf("? ");
         line = SEEsh_read_line();
         args = SEEsh_split_line(line);
