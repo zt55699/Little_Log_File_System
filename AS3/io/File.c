@@ -696,9 +696,9 @@ void Update_to_disk(FILE* disk)
     // All updates done, reset fsck status to FALSE;
     Set_fsck (disk, 0);
     printf("All updates written to disk, fsck_status=FALSE\n----------------------------\n\n");
-    Print_files();
-    Print_map();
-    Print_structure();
+    //Print_files();
+    //Print_map();
+    //Print_structure();
 }
 
 void Set_fsck (FILE* disk, int fsck_indicator){
