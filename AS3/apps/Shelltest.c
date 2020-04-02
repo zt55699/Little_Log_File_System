@@ -19,7 +19,7 @@ int SEEsh_ls(char** args){
 int SEEsh_mkdir(char** args){
     if(args[1]==NULL){
         printf ("Directory name cannot be empty!\n");
-        return 0;
+        return 1;
     }
     FILE* disk = fopen(vdisk_path, "rb+");
     Load_Structure(disk);
