@@ -5,6 +5,8 @@
 #include "Shelltest.h"
 #include "../io/File.h"
 #include "../disk/disk.h"
+#include <sys/wait.h>
+#include <sys/types.h>
 #include <unistd.h>
 #include <signal.h>
 int current_folder = 0;

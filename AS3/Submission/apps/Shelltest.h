@@ -6,6 +6,8 @@
 #define SHELLTEST_H
 #include "../io/File.h"
 #include "../disk/disk.h"
+#include <sys/wait.h>
+#include <sys/types.h>
 #include <unistd.h>
 #include <signal.h>
 
